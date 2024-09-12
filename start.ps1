@@ -15,7 +15,7 @@ function Get-FilePath {
         [string]$drive,
         [string]$fileName
     )
-    $path = "${drive}:\OSDCloud\Repo\orderassistnow-OSDClode\$fileName"  # Correct variable usage here
+    $path = "${drive}:\OSDCloud\Repo\orderassistnow-OSDClode\$fileName"
     if (Test-Path $path) {
         return $path
     } else {
@@ -37,7 +37,7 @@ foreach ($drive in $drives) {
 if (-not $localTaskbarPath) {
     Write-Host "taskbar.ps1 not found locally, downloading from GitHub..."
     try {
-        $localTaskbarPath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\taskbar.ps1"  # Correct reference here too
+        $localTaskbarPath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\taskbar.ps1"
         Invoke-WebRequest -Uri $onlineTaskbarURL -OutFile $localTaskbarPath -ErrorAction Stop
         Write-Host "Downloaded taskbar.ps1 to $localTaskbarPath"
     } catch {
@@ -46,19 +46,45 @@ if (-not $localTaskbarPath) {
     }
 }
 
-# Run the taskbar.ps1 script if available
+# Run the taskbar.ps1 script in a new, hidden PowerShell process
 if (Test-Path $localTaskbarPath) {
-    Write-Host "Running taskbar.ps1..."
-    & $localTaskbarPath
+    Write-Host "Running taskbar.ps1 in a separate PowerShell window (minimized)..."
+    Start-Process -FilePath "powershell.exe" -ArgumentList "-ExecutionPolicy Bypass -NoProfile -WindowStyle Hidden -File `"$localTaskbarPath`"" -WindowStyle Minimized
 } else {
     Write-Host "taskbar.ps1 is not available to run."
 }
+
+# Function to check internet connectivity
+function Test-InternetConnection {
+    try {
+        $result = Test-Connection -ComputerName "8.8.8.8" -Count 1 -Quiet
+        return $result
+    } catch {
+        return $false
+    }
+}
+
+# Prompt to ask if the user wants to wait for Wi-Fi connection
+do {
+    $response = [System.Windows.Forms.MessageBox]::Show("Please open WirelessConnect from taskbar to connect to Wi-Fi. Do you want to wait for Wi-Fi before continuing?", "Wi-Fi Connection", [System.Windows.Forms.MessageBoxButtons]::YesNo)
+    
+    if ($response -eq [System.Windows.Forms.DialogResult]::Yes) {
+        Write-Host "Checking internet connection..."
+        $internetConnected = Test-InternetConnection
+        if (-not $internetConnected) {
+            Write-Host "No internet connection detected, retrying..."
+        }
+    } else {
+        Write-Host "User chose not to wait for Wi-Fi. Continuing..."
+        break
+    }
+} while (-not $internetConnected)
 
 # If update.ps1 not found, download it from GitHub to the first available drive
 if (-not $localUpdatePath) {
     Write-Host "update.ps1 not found locally, downloading from GitHub..."
     try {
-        $localUpdatePath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\update.ps1"  # Correct reference here too
+        $localUpdatePath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\update.ps1"
         Invoke-WebRequest -Uri $onlineUpdateURL -OutFile $localUpdatePath -ErrorAction Stop
         Write-Host "Downloaded update.ps1 to $localUpdatePath"
     } catch {
