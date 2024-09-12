@@ -1,3 +1,5 @@
+This will allow you to have a taskbar with the follwing options durring winpe boot in os deployment
+
 Instruchion
 unzip file to your OSDcloud\Repo\orderassistnow-OSDClode  Directory
 Dism and copy Connect wierless.exe into windows\system32\ 
