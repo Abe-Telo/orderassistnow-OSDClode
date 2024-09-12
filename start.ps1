@@ -2,8 +2,8 @@
 $drives = @("C", "D", "E", "X")
 
 # Define paths for taskbar.ps1 and update.ps1 on each drive
-$localTaskbarPath = ""
-$localUpdatePath = ""
+$localTaskbarPath = $null
+$localUpdatePath = $null
 
 # Define online URLs
 $onlineTaskbarURL = "https://raw.githubusercontent.com/Abe-Telo/orderassistnow-OSDClode/main/taskbar.ps1"
@@ -15,7 +15,7 @@ function Get-FilePath {
         [string]$drive,
         [string]$fileName
     )
-    $path = "$drive:\OSDCloud\Repo\orderassistnow-OSDClode\$fileName"
+    $path = "${drive}:\OSDCloud\Repo\orderassistnow-OSDClode\$fileName"  # Correct variable usage here
     if (Test-Path $path) {
         return $path
     } else {
@@ -36,23 +36,41 @@ foreach ($drive in $drives) {
 # If taskbar.ps1 not found, download it from GitHub to the first available drive
 if (-not $localTaskbarPath) {
     Write-Host "taskbar.ps1 not found locally, downloading from GitHub..."
-    $localTaskbarPath = "$($drives[0]):\OSDCloud\Repo\orderassistnow-OSDClode\taskbar.ps1"
-    Invoke-WebRequest -Uri $onlineTaskbarURL -OutFile $localTaskbarPath
-    Write-Host "Downloaded taskbar.ps1 to $localTaskbarPath"
+    try {
+        $localTaskbarPath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\taskbar.ps1"  # Correct reference here too
+        Invoke-WebRequest -Uri $onlineTaskbarURL -OutFile $localTaskbarPath -ErrorAction Stop
+        Write-Host "Downloaded taskbar.ps1 to $localTaskbarPath"
+    } catch {
+        Write-Host "Failed to download taskbar.ps1. Please check your internet connection or the URL."
+        exit 1
+    }
 }
 
-# Run the taskbar.ps1 script
-Write-Host "Running taskbar.ps1..."
-& $localTaskbarPath
+# Run the taskbar.ps1 script if available
+if (Test-Path $localTaskbarPath) {
+    Write-Host "Running taskbar.ps1..."
+    & $localTaskbarPath
+} else {
+    Write-Host "taskbar.ps1 is not available to run."
+}
 
 # If update.ps1 not found, download it from GitHub to the first available drive
 if (-not $localUpdatePath) {
     Write-Host "update.ps1 not found locally, downloading from GitHub..."
-    $localUpdatePath = "$($drives[0]):\OSDCloud\Repo\orderassistnow-OSDClode\update.ps1"
-    Invoke-WebRequest -Uri $onlineUpdateURL -OutFile $localUpdatePath
-    Write-Host "Downloaded update.ps1 to $localUpdatePath"
+    try {
+        $localUpdatePath = "${drives[0]}:\OSDCloud\Repo\orderassistnow-OSDClode\update.ps1"  # Correct reference here too
+        Invoke-WebRequest -Uri $onlineUpdateURL -OutFile $localUpdatePath -ErrorAction Stop
+        Write-Host "Downloaded update.ps1 to $localUpdatePath"
+    } catch {
+        Write-Host "Failed to download update.ps1. Please check your internet connection or the URL."
+        exit 1
+    }
 }
 
-# Run the update.ps1 script
-Write-Host "Running update.ps1..."
-& $localUpdatePath
+# Run the update.ps1 script if available
+if (Test-Path $localUpdatePath) {
+    Write-Host "Running update.ps1..."
+    & $localUpdatePath
+} else {
+    Write-Host "update.ps1 is not available to run."
+}
